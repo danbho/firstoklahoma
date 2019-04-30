@@ -98,7 +98,7 @@ $(document).ready(function(){
                                 '#mtg-downPayment-amount',
                                 '#mtg-downPayment-percent',
                                 '#mtg-moTax',
-                                '#interestRate',
+                                '#mtg-interestRate',
                                 '#mtg-annualPayment',
                                 '#mtg-totalTax',
                                 '#mtg-totalInsurance',
@@ -115,6 +115,166 @@ $(document).ready(function(){
                                     "Please enter correct HOA fees" ];
     
         CALC_TYPE = CALC_TYPES[2];
+    }
+    // simple interest calculation
+    function getSimpleInterestCalc(inputParams)
+    {
+        const input_loanAmount = Number(inputParams[0]);
+        const input_loanLengthInMonths = Number(inputParams[1]);
+        const input_interestRate = Number(inputParams[2]) / 100;
+        // console.log("simple interest calculator!");
+        const result_principalAmount = input_loanAmount;
+        // const result_paymentAmount = (result_principalAmount + result_totalInterestRate) / result_numberOfPaymentsToPayOff;
+        const result_numberOfPaymentsToPayOff = input_loanLengthInMonths;
+        const result_interestRate = input_interestRate;
+        const result_totalPayments = input_loanLengthInMonths;
+        const result_totalInterestRate = input_loanAmount * (input_loanLengthInMonths / 12) * input_interestRate;
+
+        const result_paymentAmount = (result_principalAmount + result_totalInterestRate) / result_numberOfPaymentsToPayOff;
+
+        return [numeral(result_principalAmount).format('$0,0.00'), 
+            numeral(result_paymentAmount).format('$0,0.00'), 
+            result_numberOfPaymentsToPayOff,
+            numeral(result_interestRate).format('0.00%'), 
+            result_totalPayments, 
+            numeral(result_totalInterestRate).format('$0,0.00')];
+    }
+
+    // credit card calculation
+    function getCreditCardCalc(inputParams)
+    {
+        const input_creditCardBalance = Number(inputParams[0]);
+        const input_monthyPaymentAmount = Number(inputParams[1]);
+        const input_interestRate = Number(inputParams[2]) / 100;
+
+        const result_creditCardBalance = input_creditCardBalance;
+        const result_monthyPaymentAmount = input_monthyPaymentAmount;
+        let result_numberOfMonthlyPayments;
+        const result_interestRate = input_interestRate;
+        let result_totalPayments;
+        let result_totalInterest;
+
+        if(input_monthyPaymentAmount == 0)
+        {
+			result_numberOfMonthlyPayments = "-";
+        }
+        else
+        {
+			result_numberOfMonthlyPayments = NPER(input_interestRate / 12, 
+				input_monthyPaymentAmount,
+				-input_creditCardBalance);
+            // result_numberOfMonthlyPayments = result_numberOfMonthlyPayments.toFixed(2);
+        }
+
+        // console.log("result_numberOfMonthlyPayments:", result_numberOfMonthlyPayments);
+
+        if(result_numberOfMonthlyPayments == "-" || result_numberOfMonthlyPayments == 0)
+        {
+			result_totalInterest = "-";
+			result_totalPayments = input_creditCardBalance;
+        }
+        else
+        {
+			result_totalInterest = input_monthyPaymentAmount * result_numberOfMonthlyPayments - input_creditCardBalance;
+			result_totalPayments = result_totalInterest + input_creditCardBalance;
+        }
+
+        // console.log("result_totalInterest:", result_totalInterest);
+		// console.log("result_totalPayments:", result_totalPayments);
+
+		// reformat variables
+		if(result_numberOfMonthlyPayments != "-")
+		{
+			result_numberOfMonthlyPayments = result_numberOfMonthlyPayments.toFixed(2);
+			//result_numberOfMonthlyPayments = Math.round(result_numberOfMonthlyPayments);
+
+		}
+		if(result_totalInterest != "-")
+		{
+			result_totalInterest = numeral(result_totalInterest).format('0,0.00');
+		}
+
+        return [numeral(result_creditCardBalance).format('0,0.00'),
+            result_monthyPaymentAmount, 
+            result_numberOfMonthlyPayments,
+            numeral(result_interestRate).format('0.00%'),
+            numeral(result_totalPayments).format('0,0.00'), 
+            result_totalInterest];
+    }
+
+    // mortgage calculation
+    function getMortgageCalc(inputParams)
+    {
+        const input_loanValue = Number(inputParams[0]);
+        const input_downPayment = Number(inputParams[1]);
+        const input_interestRate = Number(inputParams[2]);
+        const input_loanTerm = Number(inputParams[3]);
+        const input_propertyTax = Number(inputParams[4]);
+        const input_homeInsurance = Number(inputParams[5]);
+        const input_HOAFees = Number(inputParams[6]);
+
+        // console.log("input_loanValue", input_loanValue);
+        // console.log("input_downPayment", input_downPayment);
+        // console.log("input_interestRate", input_interestRate);
+        // console.log("input_loanTerm", input_loanTerm);
+        // console.log("input_propertyTax", input_propertyTax);
+        // console.log("input_homeInsurance", input_homeInsurance);
+        // console.log("input_HOAFees", input_HOAFees);
+        
+        // const input_loanValue = Number(170000);
+        // const input_downPayment = Number(12000);
+        // const input_interestRate = Number(4.25);
+        // const input_loanTerm = Number(30);
+        // const input_propertyTax = Number(1200);
+        // const input_homeInsurance = Number(1000);
+        // const input_HOAFees = Number(50);
+
+        const B4 = input_loanValue;
+        const B5 = input_downPayment;
+        const B6 = input_interestRate;
+        const B7 = input_loanTerm;
+        const B8 = input_propertyTax;
+        const B9 = input_homeInsurance;
+        const B10 = input_HOAFees;
+
+        const B13 = B6/1200;
+        const C13 = Math.pow((1+B13), (B7*12));
+        const D13 = ((B13*C13)/(C13-1))*(B4-B5);
+        const E13 = D13+(B8/12)+(B9/12)+B10;
+        
+        const B14 = E13;//((((B6/1200)*(1+(B6/1200))^(B7*12))/((1+(B6/1200))^(B7*12)-1))*(B4-B5))+(B8/12)+(B9/12)+B10;
+        const B15 = B5;
+        const B16 = B5/B4;
+        const B17 = B8/12;
+        const B18 = (B6/1200)*12;
+        const B19 = D13*12;
+        const B20 = B8*B7;
+        const B21 = B9*B7;
+        const B22 = (D13*(B7*12))-(B4-B5);
+        const B23 = B22+(B4-B5);
+        
+        const output_paymentMonthly =       B14
+        const output_downPayment =          B15;
+        const output_downPaymentPercent =   B16 * 100;
+        const output_monthlyTaxPaid =       B17;
+        const output_interestRate =         B18 * 100;
+        const output_annualPaymentAmount =  B19;
+        const output_totalTaxPaid =         B20;
+        const output_totalHomeInsurance =   B21;
+        const output_totalInterestPaid =    B22;
+        const output_totalPayment =         B23;
+
+
+        return [numeral(output_paymentMonthly).format('0,0.00'), 
+            numeral(output_downPayment).format('0,0.00'), 
+            numeral(output_downPaymentPercent).format('0.00'), 
+            numeral(output_monthlyTaxPaid).format('0,0.00'), 
+            numeral(output_interestRate).format('0.00'),
+            numeral(output_annualPaymentAmount).format('0,0.00'), 
+            numeral(output_totalTaxPaid).format('0,0.00'),
+            numeral(output_totalHomeInsurance).format('0,0.00'), 
+            numeral(output_totalInterestPaid).format('0,0.00'), 
+            numeral(output_totalPayment).format('0,0.00')]
     }
 
     // Capture wf-form-Credit-Card-Calculator form action
@@ -148,14 +308,17 @@ $(document).ready(function(){
         if(calcType == 0)
         {
             setVariablesForSimpleInterest();
+            // console.log("SimpleInterest");
         }
         else if(calcType == 1)
         {
             setVariablesForCreditCard();
+            // console.log("Credit Card");
         }
         else if(calcType == 2)
         {
             setVariablesForMortgage();
+            // console.log("Mortgage");
         }
 
         // fetch input values from form
@@ -214,7 +377,7 @@ $(document).ready(function(){
     // show results to success box
     function fillResultLabels(resultArray)
     {
-        console.log(resultArray);
+        // console.log(resultArray);
         resultArray.forEach((item, index) => {
             $(INPUT_FORM).parent().find(SUCCESS_FORM).find(OUTPUT_ELEMENT_IDS[index]).text(resultArray[index]);
         })
@@ -238,58 +401,6 @@ $(document).ready(function(){
             // mortgate calculation
             return getMortgageCalc(inputParams);
         }
-    }
-
-    // simple interest calculation
-    function getSimpleInterestCalc(inputParams)
-    {
-        const input_loanAmount = Number(inputParams[0]);
-        const input_loanLengthInMonths = Number(inputParams[1]);
-        const input_interestRate = Number(inputParams[2]) / 100;
-
-        const result_principalAmount = input_loanAmount;
-        // const result_paymentAmount = (result_principalAmount + result_totalInterestRate) / result_numberOfPaymentsToPayOff;
-        const result_numberOfPaymentsToPayOff = input_loanLengthInMonths;
-        const result_interestRate = input_interestRate;
-        const result_totalPayments = input_loanLengthInMonths;
-        const result_totalInterestRate = input_loanAmount * (input_loanLengthInMonths / 12) * input_interestRate;
-
-        const result_paymentAmount = (result_principalAmount + result_totalInterestRate) / result_numberOfPaymentsToPayOff;
-
-        return [numeral(result_principalAmount).format('$0,0.00'), 
-            numeral(result_paymentAmount).format('$0,0.00'), 
-            result_numberOfPaymentsToPayOff,
-            numeral(result_interestRate).format('0.00%'), 
-            result_totalPayments, 
-            numeral(result_totalInterestRate).format('$0,0.00')];
-    }
-
-    // credit card calculation
-    function getCreditCardCalc(inputParams)
-    {
-        const input_creditCardBalance = Number(inputParams[0]);
-        const input_monthyPaymentAmount = Number(inputParams[1]);
-        const input_interestRate = Number(inputParams[2]);
-
-        const result_creditCardBalance = numeral(input_creditCardBalance).format('0,0.00');
-        const result_monthyPaymentAmount = input_monthyPaymentAmount;
-        const result_numberOfMonthlyPayments = 53;
-        const result_interestRate = numeral(input_interestRate).format('0,0.00');
-        const result_totalPayments = numeral(2654.44).format('0,0.00');
-        const result_totalInterest = numeral(654.44).format('0,0.00');
-
-        return [result_creditCardBalance, 
-            result_monthyPaymentAmount, 
-            result_numberOfMonthlyPayments, 
-            result_interestRate, 
-            result_totalPayments, 
-            result_totalInterest];
-    }
-
-    // mortgage calculation
-    function getMortgageCalc(inputParams)
-    {
-        return ["2aa", '2bb', '2cc', '2dd', '2ee','2tt','2tt','2tt','2tt','2ggg']
     }
 
     // check validation of all input fields
@@ -329,5 +440,30 @@ $(document).ready(function(){
     {
         $(INPUT_FORM).parent().find(FAIL_MSG_BOX).text(errorMsg);
     }
+
+    ///////////////////////////////////////////////////////////////
+    // Financial calculations
+
+    //////////////////Credit Card calculations/////////////////////
+    function NPER(rate, payment, present, future, type) {
+        // Initialize type
+        var type = (typeof type === 'undefined') ? 0 : type;
+      
+        // Initialize future value
+        var future = (typeof future === 'undefined') ? 0 : future;
+      
+        // Evaluate rate and periods (TODO: replace with secure expression evaluator)
+        rate = eval(rate);
+      
+        // Return number of periods
+        var num = payment * (1 + rate * type) - future * rate;
+        var den = (present * rate + payment * (1 + rate * type));
+        return Math.log(num / den) / Math.log(1 + rate);
+      }
+
+
+
+    //////////////////Mortgage calculations///////////////////////
+
 
 });
