@@ -11,9 +11,9 @@ $(document).ready(function(){
                         "credit_card",
                         "mortgage"];
 
-    const INPUT_FORM_IDS = ["#wf-form-Mortgage-Calculator",
+    const INPUT_FORM_IDS = ["form#wf-form-Mortgage-Calculator:first",
                             "#wf-form-Credit-Card-Calculator",
-                            "#wf-form-Interest-Calculator"];
+                            "form#wf-form-Interest-Calculator:last"];
 
     // calculator specific elements
     let INPUT_FORM = "#wf-form-Credit-Card-Calculator";
